@@ -10,6 +10,7 @@
   },
   "files": [
     "lib",
+    "bin",
     "cordis.patch.yml",
     "README.md",
     "LICENSE"
@@ -42,5 +43,8 @@
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
+  },
+  "bin": {
+    "dsh-im-send": "./bin/dsh-im-send.mjs"
   }
 }

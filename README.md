@@ -61,6 +61,36 @@ dsh plugin --profile web add link:/absolute/path/to/dsh-im-tools
   [#385](https://github.com/xmanrui/dsh-im/issues/385)）。在上游合并前，需要给 dsh-im 打上该补丁
   才能用 `im_send_file`；没有该接口时工具会返回 `http-404` / `http-401`。
 
+## 无模型推送（CLI，0 token）
+
+定时任务、构建脚本、cron 不需要经过 agent，直接调用：
+
+```bash
+dsh-im-send targets                         # 看目标与额度（--json 可机读）
+dsh-im-send text "构建完成"                  # 发文字
+dsh-im-send text "**报告**" --format markdown
+dsh-im-send file /abs/path/report.pdf        # 发文件
+dsh-im-send text "hi" --target tgt_xxx --bot wx_xxx
+```
+
+- 不创建会话、不调用模型，因此**不消耗 token**；
+- 与工具共用同一份额度记录（`$DSH_HOME/dsh-im-tools/quota.json`）；
+- 退出码：`0` 成功，`1` 出错，`2` 额度用尽/熔断，`3` 渠道投递失败；
+- 额度用尽时可用 `--notify-target <target>`（或 `DSH_IM_NOTIFY_TARGET`）把固定提示发到**另一个渠道**
+  （例如飞书群），因为此时微信本身已经发不出去；
+- 适合写成：
+
+```cron
+*/30 * * * * DSH_HOME=$HOME/.dsh node /path/to/dsh-im-tools/bin/dsh-im-send.mjs text "定时报告" >> /tmp/dsh-im-send.log 2>&1
+```
+
+```bash
+# systemd timer / 脚本里按退出码处理
+if ! node bin/dsh-im-send.mjs text "完成"; then
+  [ $? -eq 2 ] && echo "微信额度用尽，需要用户回一句话" | mail -s alert you@example.com
+fi
+```
+
 ## 配置
 
 | 环境变量 | 默认 | 说明 |
