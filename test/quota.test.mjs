@@ -108,6 +108,27 @@ test('two failed sends trip the breaker until the user writes again', async () =
   assert.equal(result.sent, true);
 });
 
+test('session-sync outbound messages count against the allowance', async () => {
+  const now = Date.now();
+  await writeFile(
+    join(home, 'integrations', 'dsh-weixin', 'accounts', 'bot1', 'state.json'),
+    JSON.stringify({
+      contextTokens: { users: { u1: { receivedAt: 1000, token: 'x' } } },
+      recentOutboundMessages: [
+        { text: '[来自 DSH] hi', sentAt: now - 500 },
+        { text: '[DSH 助手] hello', sentAt: now - 400 },
+      ],
+    }),
+  );
+  const t = await tools();
+  await assert.rejects(
+    () => t.get('im_send_text').execute({ text: 'blocked by sync' }),
+    (error) => error.code === 'im-quota-exhausted',
+  );
+  const info = await t.get('im_targets').execute();
+  assert.equal(info.targets[0].sentSinceLastUser, 2);
+});
+
 test('non-WeChat channels skip the allowance', async () => {
   await mkdir(join(home, 'integrations', 'dsh-feishu'), { recursive: true });
   await writeFile(

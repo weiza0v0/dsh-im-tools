@@ -4,7 +4,7 @@
 // This is the zero-token path: cron, systemd timers, build hooks and other
 // scripts call it directly; no model is involved and no Session is created.
 import {
-  lastUserMessageAt,
+  outboundSinceInbound,
   loadTargets,
   post,
   quotaKey,
@@ -61,11 +61,12 @@ async function printTargets() {
   const limit = quotaLimit();
   const rows = [];
   for (const target of targets) {
-    const lastUser = await lastUserMessageAt(target);
+    const { lastInbound, outbound } = await outboundSinceInbound(target);
     const entry = store[quotaKey(target)] ?? null;
-    const stale = lastUser > (Number(entry?.since) || 0);
-    const sent = stale ? 0 : (Number(entry?.count) || 0);
-    const blocked = !stale && Boolean(entry?.blockedAt) && lastUser <= Number(entry.blockedAt);
+    const stale = lastInbound > (Number(entry?.since) || 0);
+    const toolSends = stale ? 0 : (Number(entry?.count) || 0);
+    const sent = Math.max(toolSends, outbound);
+    const blocked = !stale && Boolean(entry?.blockedAt) && lastInbound <= Number(entry.blockedAt);
     rows.push({
       channel: target.channel,
       botId: target.botId,

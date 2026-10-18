@@ -25,6 +25,9 @@
 发一条消息才会恢复。本插件在发送前就拦截：
 
 - 默认每个目标**自上次用户消息以来最多 8 条**（`DSH_IM_PROACTIVE_LIMIT` 可调）；
+- 计数不只看本工具：还会读取 dsh-im 写到 `state.json` 的 `recentOutboundMessages`，
+  把**双向同步**（`[来自 DSH]` / `[DSH 助手]`）和助手回复算进去，取两者较大值；
+  因此网页聊天开着同步时，额度会消耗得更快，`im_targets` 会如实显示；
 - **连续 2 次发送失败**即熔断，避免继续撞限制；
 - 恢复方式：用户给机器人发任意一条消息（插件通过 `state.json` 里
   `contextTokens.users[].receivedAt` 检测到新消息后自动重置）；
