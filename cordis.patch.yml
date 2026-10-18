@@ -1,0 +1,4 @@
+# dsh-im-tools bundle patch: register the IM delivery tools on the host.
+- insert:
+    - id: dsh-im-tools
+      name: 'dsh-im-tools'

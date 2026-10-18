@@ -1,0 +1,46 @@
+{
+  "name": "dsh-im-tools",
+  "version": "0.1.0",
+  "description": "给 DSH agent 的 IM 主动投递工具：列出投递目标、发文字、发文件（走 dsh-im 的 delivery HTTP 接口，不依赖当前会话）。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "im",
+    "wechat",
+    "notification",
+    "delivery"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weiza0v0/dsh-im-tools.git"
+  },
+  "homepage": "https://github.com/weiza0v0/dsh-im-tools#readme",
+  "bugs": {
+    "url": "https://github.com/weiza0v0/dsh-im-tools/issues"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
