@@ -41,9 +41,10 @@ dsh plugin --profile web add link:/absolute/path/to/dsh-im-tools
 ### 关于文件投递
 
 - 文字走上游自带的 `POST /api/dsh-im/delivery/messages`；
-- 文件走 `POST /api/dsh-im/delivery/files`，这是**本项目的配套补丁**提供的接口（上游目前只支持文字）。
-  补丁与上游 issue 见 `docs/upstream-issue.md`；在上游合并前，需要给 dsh-im 打上该补丁才能用
-  `im_send_file`。没有该接口时，工具会返回 `http-404` / `http-401`。
+- 文件走 `POST /api/dsh-im/delivery/files`，这是**配套补丁**提供的接口（上游目前只支持文字）：
+  [weiza0v0/dsh-im-hold](https://github.com/weiza0v0/dsh-im-hold)（对应上游 issue
+  [#385](https://github.com/xmanrui/dsh-im/issues/385)）。在上游合并前，需要给 dsh-im 打上该补丁
+  才能用 `im_send_file`；没有该接口时工具会返回 `http-404` / `http-401`。
 
 ## 配置
 
