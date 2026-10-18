@@ -55,6 +55,15 @@ dsh plugin --profile web add link:/absolute/path/to/dsh-im-tools
 | `DSH_IM_BOT_ID` | — | 多目标时的默认 botId |
 | `DSH_IM_TARGET_ID` | — | 多目标时的默认 targetId |
 
+## 常见问题
+
+- **`502 delivery-failed` / iLink `{"ret":-2,"errmsg":"prepare failed"}`**：这是微信侧的限制，不是插件问题。
+  连续给机器人主动发送约 10 条消息后会被拒绝，需要**用户先给机器人发一条消息**（或机器人自身发消息）才能重新激活。
+  上游相关讨论：<https://github.com/xmanrui/dsh-im/issues/151>。自动化场景请控制频率、避免连续重试。
+- **工具看不到**：重启 `dsh web` 后，新建一个会话即可；长会话的工具清单不会热更新。
+- **`http-404` / `http-401`（`im_send_file`）**：说明 dsh-im 还没有文件投递接口，需要打上
+  [dsh-im-hold](https://github.com/weiza0v0/dsh-im-hold) 补丁或等上游支持。
+
 ## 安全提示
 
 - 依赖的两个 HTTP 接口**没有鉴权、也没有 CORS**，只应在本机使用，不要把 3080 暴露到公网；
