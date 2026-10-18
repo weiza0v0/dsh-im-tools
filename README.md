@@ -18,6 +18,21 @@
 目标解析顺序：工具参数 → 环境变量 `DSH_IM_BOT_ID` / `DSH_IM_TARGET_ID` → 本机唯一目标。
 只有一个目标时可以全部省略。
 
+### 微信额度熔断（默认开启）
+
+微信会对同一会话的连续主动推送做限制：约 10 条之后开始返回 `prepare failed`
+（见 [xmanrui/dsh-im#151](https://github.com/xmanrui/dsh-im/issues/151)），且只有用户再给机器人
+发一条消息才会恢复。本插件在发送前就拦截：
+
+- 默认每个目标**自上次用户消息以来最多 8 条**（`DSH_IM_PROACTIVE_LIMIT` 可调）；
+- **连续 2 次发送失败**即熔断，避免继续撞限制；
+- 恢复方式：用户给机器人发任意一条消息（插件通过 `state.json` 里
+  `contextTokens.users[].receivedAt` 检测到新消息后自动重置）；
+- 额度/熔断状态记录在 `$DSH_HOME/dsh-im-tools/quota.json`，`im_targets` 会显示
+  `sent/limit` 与是否 `BLOCKED`；
+- 超限返回 `im-quota-exhausted`，熔断返回 `im-quota-blocked`，消息里会写明原因。
+- 其它渠道（飞书/企微/Telegram 等）不套用这个额度。
+
 ## 安装
 
 ```bash

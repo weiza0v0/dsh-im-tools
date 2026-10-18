@@ -48,6 +48,7 @@ before(async () => {
   );
   process.env.DSH_HOME = home;
   process.env.DSH_WEB_URL = base;
+  process.env.DSH_IM_PROACTIVE_LIMIT = '50';
   delete process.env.DSH_IM_BOT_ID;
   delete process.env.DSH_IM_TARGET_ID;
 });
