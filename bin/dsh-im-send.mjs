@@ -63,13 +63,15 @@ async function printTargets() {
   for (const target of targets) {
     const lastUser = await lastUserMessageAt(target);
     const entry = store[quotaKey(target)] ?? null;
-    const blocked = Boolean(entry?.blockedAt) && lastUser <= Number(entry.blockedAt);
+    const stale = lastUser > (Number(entry?.since) || 0);
+    const sent = stale ? 0 : (Number(entry?.count) || 0);
+    const blocked = !stale && Boolean(entry?.blockedAt) && lastUser <= Number(entry.blockedAt);
     rows.push({
       channel: target.channel,
       botId: target.botId,
       targetId: target.targetId,
       name: target.name ?? '',
-      sent: Number(entry?.count) || 0,
+      sent,
       limit,
       blocked,
     });
