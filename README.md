@@ -7,6 +7,18 @@
 配套插件是 [`@xmanrui/dsh-im`](https://github.com/xmanrui/dsh-im)。本仓库是**独立插件**，不 fork、
 不修改上游代码；文件投递也不再依赖任何 dsh-im 源码补丁。
 
+## 已验证环境
+
+| 项 | 版本 | 结果 |
+| --- | --- | --- |
+| `@xmanrui/dsh-im` | 5.4.0（无补丁） | ✅ 文字投递正常；文件走飞书直连 |
+| `@xmanrui/dsh-im` | 5.10.0（无补丁） | ✅ 文字投递正常；文件走飞书直连 |
+| DSH Desktop | 0.2.x | ✅ 网页/定时任务回合均可调用 |
+| Node | 22.19+ / 24 | ✅ |
+
+飞书直连只依赖 `integrations/dsh-feishu/{config.json,workspaces.json}` 与
+`$DSH_HOME/.credentials.yaml` 的 `refs:` 段，这三个文件在 dsh-im 5.x 各版本间格式稳定。
+
 ## 提供的工具
 
 | 工具 | 作用 |
