@@ -4,6 +4,7 @@
 // This is the zero-token path: cron, systemd timers, build hooks and other
 // scripts call it directly; no model is involved and no Session is created.
 import {
+  deliverFile,
   outboundSinceInbound,
   loadTargets,
   post,
@@ -137,11 +138,9 @@ async function main() {
     const path = rest[0];
     if (!path) usage();
     const target = await resolveTarget(selector);
-    const result = await sendGuarded(target, '/api/dsh-im/delivery/files', {
-      botId: target.botId,
-      targetId: target.targetId,
-      path,
-    });
+    // Feishu goes straight to the open platform; other channels fall back to
+    // the upstream delivery/files endpoint.
+    const result = await deliverFile(target, path);
     process.stdout.write(`${JSON.stringify(result)}\n`);
     return;
   }

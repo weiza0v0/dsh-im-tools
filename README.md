@@ -5,7 +5,7 @@
 不需要先绑定会话，也不用拼 `curl`。
 
 配套插件是 [`@xmanrui/dsh-im`](https://github.com/xmanrui/dsh-im)。本仓库是**独立插件**，不 fork、
-不修改上游代码。
+不修改上游代码；文件投递也不再依赖任何 dsh-im 源码补丁。
 
 ## 提供的工具
 
@@ -13,7 +13,7 @@
 | --- | --- |
 | `im_targets` | 列出本机已配置的主动投递目标（渠道 / targetId / 名称 / botId） |
 | `im_send_text` | 主动发送一条文字；`format` 支持 `plain` / `markdown` |
-| `im_send_file` | 主动发送本地文件（绝对路径，≤ 30 MB，图片自动走图片消息） |
+| `im_send_file` | 主动发送本地文件（绝对路径，≤ 30 MB，图片自动走图片消息）；飞书目标直连开放平台，其它渠道需上游支持 |
 
 目标解析顺序：工具参数 → 环境变量 `DSH_IM_BOT_ID` / `DSH_IM_TARGET_ID` → 本机唯一目标。
 只有一个目标时可以全部省略。
@@ -56,13 +56,24 @@ dsh plugin --profile web add link:/absolute/path/to/dsh-im-tools
 1. 已装并连接 `@xmanrui/dsh-im`，且在「设置 → IM机器人 → 主动投递」里保存了至少一个目标；
 2. DSH Web 在跑（默认 `http://127.0.0.1:3080`，可用 `DSH_WEB_URL` 覆盖）。
 
-### 关于文件投递
+### 关于文件投递（v0.2.0 起：飞书直连，无需补丁）
 
-- 文字走上游自带的 `POST /api/dsh-im/delivery/messages`；
-- 文件走 `POST /api/dsh-im/delivery/files`，这是**配套补丁**提供的接口（上游目前只支持文字）：
-  [weiza0v0/dsh-im-hold](https://github.com/weiza0v0/dsh-im-hold)（对应上游 issue
-  [#385](https://github.com/xmanrui/dsh-im/issues/385)）。在上游合并前，需要给 dsh-im 打上该补丁
-  才能用 `im_send_file`；没有该接口时工具会返回 `http-404` / `http-401`。
+- **文字**走上游自带的 `POST /api/dsh-im/delivery/messages`，不需要任何补丁；
+- **文件**分两条路：
+  - **飞书目标 → 直连飞书开放平台**（本插件自己发，不经过 dsh-im）：
+    `tenant_access_token/internal` → `im/v1/files`（图片走 `im/v1/images`）→ `im/v1/messages`。
+    所以 dsh-im 可以随便跟着上游升级，`im_send_file` 不会失效，也不需要
+    [dsh-im-hold](https://github.com/weiza0v0/dsh-im-hold) 这类源码补丁。
+    私聊目标用 `open_id`，群聊目标用 `chat_id`，取自
+    `$DSH_HOME/integrations/dsh-feishu/workspaces.json` 的 `deliveryTargets`；
+    app secret 取自 `$DSH_HOME/.credentials.yaml` 的 `refs:` 段（键名 = 机器人 `secretRef`），
+    也可用同名环境变量覆盖。
+  - **其它渠道 → 上游 `POST /api/dsh-im/delivery/files`**：上游从来没提供这个接口，
+    所以现在会返回 `im-file-unsupported`。要发文件请选飞书目标，或把文件作为回合回复发出。
+
+飞书直连自带的安全阀：必须是绝对路径的普通文件、拒绝符号链接、≤ 30 MB、
+拒发 `.credentials.yaml` / `id_rsa*` / `.env` / `server-credentials.json` 以及
+`.ssh` `.aws` `.kube` `.gnupg` `.docker` 目录下的文件。
 
 ## 无模型推送（CLI，0 token）
 
@@ -109,14 +120,17 @@ fi
   连续给机器人主动发送约 10 条消息后会被拒绝，需要**用户先给机器人发一条消息**（或机器人自身发消息）才能重新激活。
   上游相关讨论：<https://github.com/xmanrui/dsh-im/issues/151>。自动化场景请控制频率、避免连续重试。
 - **工具看不到**：重启 `dsh web` 后，新建一个会话即可；长会话的工具清单不会热更新。
-- **`http-404` / `http-401`（`im_send_file`）**：说明 dsh-im 还没有文件投递接口，需要打上
-  [dsh-im-hold](https://github.com/weiza0v0/dsh-im-hold) 补丁或等上游支持。
+- **`im-file-unsupported`（`im_send_file`）**：目标不是飞书。上游 dsh-im 只支持主动投递文字，
+  文件投递目前只有「飞书直连」这一条路；把目标换成飞书私聊/群聊即可。
+- **`im-feishu-permission`**：飞书应用缺发消息/发文件权限（`99991663` / `99991664`），
+  去开放平台补 `im:message:send_as_bot` 等权限并发布版本。
 
 ## 安全提示
 
 - 依赖的两个 HTTP 接口**没有鉴权、也没有 CORS**，只应在本机使用，不要把 3080 暴露到公网；
-- `im_send_file` 接受任意**本地绝对路径**（≤ 30 MB）。如果你的环境不可信，请在插件侧加目录白名单，
-  或只把工具提供给可信 agent。
+- `im_send_file` 接受任意**本地绝对路径**（≤ 30 MB），并已内置拒发凭据/私钥类文件与敏感目录
+  （见上文）；如果你的环境不可信，可以再加目录白名单，或只把工具提供给可信 agent。
+- 飞书直连不会新建无鉴权的 HTTP 端点：文件只在进程内读取后上传，不需要把本机端口暴露出去。
 
 ## 工作原理
 

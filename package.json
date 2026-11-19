@@ -1,11 +1,12 @@
 {
   "name": "dsh-im-tools",
-  "version": "0.1.0",
-  "description": "给 DSH agent 的 IM 主动投递工具：列出投递目标、发文字、发文件（走 dsh-im 的 delivery HTTP 接口，不依赖当前会话）。",
+  "version": "0.2.0",
+  "description": "给 DSH agent 的 IM 主动投递工具：列出投递目标、发文字、发文件。文字走上游 dsh-im 的 delivery HTTP 接口；飞书文件直连飞书开放平台（不依赖任何 dsh-im 补丁）。不依赖当前会话。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
+    "./feishu-direct": "./lib/feishu-direct.mjs",
     "./package.json": "./package.json"
   },
   "files": [
